@@ -1,0 +1,98 @@
+"use strict";
+const $=s=>document.querySelector(s),R=Math.random,ri=(a,b)=>a+Math.floor(R()*(b-a+1)),pk=a=>a[Math.floor(R()*a.length)],f2=x=>Math.round(x*100)/100;
+const FN=["BRA","ARG","FRA","ESP","POR","NED","BEL","ENG","GER","ITA","POL"],TAC=["Ofensywna","Zrównoważona","Defensywna"];
+const FM={"4-3-3":"G50,90 D14,70 D38,73 D62,73 D86,70 M26,48 M50,52 M74,48 F20,22 F50,14 F80,22","4-4-2":"G50,90 D14,70 D38,73 D62,73 D86,70 M14,46 M38,50 M62,50 M86,46 F36,18 F64,18","3-5-2":"G50,90 D24,72 D50,75 D76,72 M10,46 M32,52 M50,38 M68,52 M90,46 F36,18 F64,18","4-2-3-1":"G50,90 D14,70 D38,73 D62,73 D86,70 M36,56 M64,56 M20,36 M50,32 M80,36 F50,14"};
+const slots=f=>FM[f].split(" ").map(s=>{const[x,y]=s.slice(1).split(",");return{r:s[0],x:+x,y:+y}});
+const vf=(o,a)=>f2(Math.max(.1,Math.pow(Math.max(o-50,1),2.4)/55*(a<24?1.4:a<29?1:a<32?.7:.4)));
+const wf=v=>Math.max(2,Math.round(v*2.5));
+let S=null,tab=0,busy=false,sel=null,N=null,M=null,flash="",TF={pos:"*",q:"",max:0},pid=0;
+function mkp(pos,age,ovr,nat,val,n){const pot=Math.min(99,ovr+(age<26?ri(0,Math.round((26-age)*1.5)):0)),v=val||vf(ovr,age);return{id:++pid,n,pos,age,ovr,pot,nat,val:v,wage:wf(v)}}
+function fil(k,q,top){const nat=R()<.62?k.cc:pk(FN),[f,l]=NP[nat].split("|").map(z=>z.split(" "));return mkp(q,ri(18,35),Math.max(45,Math.min(k.s+2,Math.round(k.s-(top?2:8)+ri(-4,4)))),nat,0,pk(f)+" "+pk(l)+"*")}
+function mkClub(lg,cc,c){const[n,st,s]=c.split("|"),k={n,lg,cc,st,s:+s,pl:[],pts:0,w:0,d:0,l:0,gf:0,ga:0,bud:Math.round(Math.pow(s-55,2)/6)},need={G:3,D:8,M:7,F:6},rl=REAL[n];
+ if(rl)rl.split(";").forEach(x=>{const p=x.split(" ");need[p[0]]--;k.pl.push(mkp(p[0],+p[1],+p[2],p[3],+p[4],p.slice(5).join(" ")))});
+ for(const q in need)for(let i=0;i<need[q];i++)k.pl.push(fil(k,q,!rl&&i<(q=="G"?1:q=="D"?4:3)));return k}
+function sched(a){const n=a.length;let t=[...a],r=[];for(let i=0;i<n-1;i++){let m=[];for(let j=0;j<n/2;j++)m.push([t[j],t[n-1-j]]);r.push(m);t.splice(1,0,t.pop())}return r.concat(r.map(x=>x.map(([h,g])=>[g,h])))}
+const eff=(p,r)=>p.ovr-(p.pos==r?0:(p.pos=="G"||r=="G")?30:8);
+function auto(c,f){const used={},sl=slots(f),ids=[];["G","D","M","F"].forEach(r=>sl.forEach((s,i)=>{if(s.r!=r)return;let b=null;c.pl.forEach(p=>{if(!used[p.id]&&(!b||eff(p,r)>eff(b,r)))b=p});used[b.id]=1;ids[i]=b.id}));return ids}
+const valid=(c,ids)=>ids&&ids.length==11&&new Set(ids).size==11&&ids.every(i=>c.pl.some(p=>p.id==i));
+const lu=(c,ids,f)=>slots(f).map((s,i)=>({r:s.r,p:c.pl.find(p=>p.id==ids[i])}));
+const team=n=>{const c=S.cl[n];if(n==S.me){if(!valid(c,S.xi))S.xi=auto(c,S.form);return lu(c,S.xi,S.form)}return lu(c,auto(c,"4-3-3"),"4-3-3")};
+function pw(L,k){const g=rs=>{const a=L.filter(x=>rs.includes(x.r));return a.length?a.reduce((s,x)=>s+eff(x.p,x.r),0)/a.length:50};return{a:g("F")*.6+g("M")*.4+[3,0,-3][k],d:g("D")*.55+g("G")*.45+[-3,0,3][k],m:g("M")}}
+function pois(l){const e=Math.exp(-l);let k=0,p=1;do{k++;p*=R()}while(p>e);return k-1}
+function sim(H,A,kh,ka){const h=pw(H,kh),a=pw(A,ka),lam=(x,y,f)=>Math.min(4,Math.max(.2,1.25*f*Math.exp((x.a-y.d)/26)*Math.exp((x.m-y.m)/90)));
+ const g=[pois(lam(h,a,1.12)),pois(lam(a,h,.92))],ev=[];
+ [H,A].forEach((L,s)=>{const w=L.map(x=>({F:5,M:2,D:.7,G:0})[x.r]),T=w.reduce((x,y)=>x+y);for(let i=0;i<g[s];i++){let r=R()*T,j=0;while(j<L.length-1&&(r-=w[j])>0)j++;ev.push({m:ri(1,90),s,n:L[j].p.n})}});
+ return{g,ev:ev.sort((x,y)=>x.m-y.m)}}
+function ap(h,a,g){const H=S.cl[h],A=S.cl[a];H.gf+=g[0];H.ga+=g[1];A.gf+=g[1];A.ga+=g[0];if(g[0]>g[1]){H.pts+=3;H.w++;A.l++}else if(g[0]<g[1]){A.pts+=3;A.w++;H.l++}else{H.pts++;A.pts++;H.d++;A.d++}}
+const table=()=>S.names.map(n=>S.cl[n]).sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);
+const find=id=>{for(const n in S.cl){const p=S.cl[n].pl.find(x=>x.id==id);if(p)return[S.cl[n],p]}};
+const dt=rd=>new Date(Date.UTC(S.season,7,15)+rd*6048e5),dstr=rd=>dt(rd).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
+const win=()=>{if(S.rd>=S.sc.length)return true;const m=dt(S.rd).getUTCMonth();return m==7||m==0||m==5||m==6};
+const wbill=c=>c.pl.reduce((s,p)=>s+p.wage,0)/1000;
+function log(t,a){S.fin.unshift({d:dstr(Math.min(S.rd,S.sc.length)),t,a:f2(a)});S.fin=S.fin.slice(0,60)}
+function money(home,w){const c=S.cl[S.me],wb=wbill(c),inc=wb*(.9+(home?.35:0)+(w?.05:0)),tc=wb*[.02,.05,.1][S.int];c.bud=f2(c.bud+inc-wb-tc);log(`Kolejka ${S.rd+1}: wpływy ${f2(inc)}, pensje ${f2(wb)}, trening ${f2(tc)} (M€)`,inc-wb-tc)}
+function train(){const up=[];S.cl[S.me].pl.forEach(p=>{const m=S.foc=="Y"?p.age<=21:p.pos==S.foc,ch=[.04,.08,.14][S.int]*(p.age<=21?3:p.age<=25?2:p.age<=29?1:.2)*(m?1:.25);if(p.ovr<p.pot&&R()<ch){p.ovr++;p.val=vf(p.ovr,p.age);p.wage=Math.max(p.wage,wf(p.val));up.push(p.n+" ("+p.ovr+")")}});return up}
+const save=(k="fm_auto")=>{try{S.pid=pid;localStorage.setItem(k,JSON.stringify(S));localStorage.setItem(k+"_m",JSON.stringify({me:S.me,season:S.season,rd:S.rd,lg:S.lg}))}catch(e){flash="Nie udało się zapisać (brak miejsca w pamięci przeglądarki)."}};
+const load=k=>{try{const s=JSON.parse(localStorage.getItem(k));if(s){S=s;pid=s.pid;tab=0;sel=N=M=null;return true}}catch(e){}return false};
+function mk(lg,me){pid=0;const cl={};for(const g in LG)LG[g].c.split(";").forEach(c=>{const k=mkClub(g,LG[g].cc,c);cl[k.n]=k});const names=Object.keys(cl).filter(n=>cl[n].lg==lg);
+ S={lg,me,season:2026,rd:0,tac:1,form:"4-3-3",cl,names,sc:sched(names),res:[],fin:[],foc:"M",int:1,last:"",plog:""};S.xi=auto(cl[me],S.form);tab=0;sel=N=M=null;save();render()}
+function nextSeason(){const tb=table(),pos=tb.findIndex(t=>t.n==S.me)+1,c=S.cl[S.me],pr=(S.names.length-pos+1)*2;c.bud=f2(c.bud+pr);log(`Nagroda za ${pos}. miejsce`,pr);
+ for(const n in S.cl){const k=S.cl[n];k.pts=k.w=k.d=k.l=k.gf=k.ga=0;k.pl.forEach(p=>{p.age++;const d=p.age<=23?ri(1,3):p.age<=29?ri(-1,1):-ri(0,3);p.ovr=Math.max(40,Math.min(p.age<=25?Math.max(p.pot,p.ovr):99,p.ovr+d));p.val=vf(p.ovr,p.age);p.wage=Math.max(p.wage,wf(p.val))})}
+ S.season++;S.rd=0;S.sc=sched(S.names);S.res=[];S.last="";S.plog="";save();render()}
+function play(){if(busy)return;busy=true;$("#go").disabled=true;
+ const out=S.sc[S.rd].map(([h,a])=>({h,a,r:sim(team(h),team(a),h==S.me?S.tac:1,a==S.me?S.tac:1)})),mine=out.find(x=>x.h==S.me||x.a==S.me),lv=$("#live");let m=0,gh=0,ga=0,lg="";
+ const iv=setInterval(()=>{m++;mine.r.ev.filter(e=>e.m==m).forEach(e=>{e.s?ga++:gh++;lg+=`<div>${m}' ⚽ ${e.n} (${e.s?mine.a:mine.h})</div>`});
+  lv.innerHTML=`<div class="box"><div class="mu">${m}. minuta</div><div class="sc">${gh} : ${ga}</div><div class="ev">${lg||'<span class="mu">Na razie bez goli…</span>'}</div></div>`;
+  if(m>=90){clearInterval(iv);out.forEach(x=>ap(x.h,x.a,x.r.g));const home=mine.h==S.me;money(home,home?gh>ga:ga>gh);const up=train();
+   S.res[S.rd]=`${gh}:${ga}`;S.last=`Ostatni mecz: ${mine.h} ${gh}:${ga} ${mine.a}`;S.plog=up.length?"Postęp w treningu: "+up.join(", "):"";S.rd++;busy=false;save();setTimeout(render,1500)}},50)}
+function cs(i){if(sel&&sel.pid)place(sel.pid,i);else if(sel&&sel.slot!=null&&sel.slot!=i){const t=S.xi[i];S.xi[i]=S.xi[sel.slot];S.xi[sel.slot]=t}else if(sel&&sel.slot==i){sel=null;return render()}else{sel={slot:i};return render()}sel=null;save();render()}
+function place(id,i){const j=S.xi.indexOf(id);if(j>=0)S.xi[j]=S.xi[i];S.xi[i]=id}
+function cp(id){if(sel&&sel.slot!=null){place(id,sel.slot);sel=null;save()}else sel=sel&&sel.pid==id?null:{pid:id};render()}
+function setForm(f){S.form=f;S.xi=auto(S.cl[S.me],f);sel=null;save();render()}
+function neg(id){if(!win())return;const[c,p]=find(id);if(S.cl[S.me].pl.length>=30){flash="Kadra pełna (maks. 30 zawodników).";return render()}N={id,st:0,r:0,ask:f2(p.val*(.95+R()*.4))};N.msg=`${c.n} wycenia zawodnika na ${N.ask} M€.`;render()}
+function bid(){const o=f2(+$("#of").value),[c,p]=find(N.id),me=S.cl[S.me];if(!(o>0))return;
+ if(N.st==0){if(o>me.bud){N.msg="Masz za mało środków w budżecie.";return render()}
+  if(o>=N.ask*.97){N.fee=o;N.st=1;N.r=0;N.w=Math.round(p.wage*(1+R()*.3));N.msg=`Kluby ustaliły kwotę ${o} M€. Zawodnik żąda ${N.w} tys. €/tydz.`}
+  else if(o>=N.ask*.75&&N.r<3){N.r++;N.ask=f2(Math.max(o,N.ask-(N.ask-o)*.4));N.msg=`Kontrpropozycja klubu: ${N.ask} M€ (runda ${N.r}/3).`}
+  else{flash=`${c.n} odrzucił ofertę za ${p.n}.`;N=null}}
+ else{if(o>=N.w*.97){me.bud=f2(me.bud-N.fee);c.pl=c.pl.filter(x=>x.id!=p.id);c.pl.push(fil(c,p.pos,1));p.wage=o;me.pl.push(p);log(`Transfer: kupno ${p.n} z ${c.n}`,-N.fee);flash=`${p.n} dołączył do klubu za ${N.fee} M€.`;N=null;save()}
+  else if(o>=N.w*.8&&N.r<2){N.r++;N.w=Math.round(Math.max(o,N.w-(N.w-o)*.4));N.msg=`Zawodnik obniża żądanie do ${N.w} tys. €/tydz. (runda ${N.r}/2).`}
+  else{flash=`${p.n} odrzucił kontrakt. Transfer nie doszedł do skutku.`;N=null}}
+ render()}
+function sellOpen(id){if(!win())return;const me=S.cl[S.me];if(me.pl.length<=18){flash="Minimum 18 zawodników w kadrze.";return render()}const[,p]=find(id),b=pk(Object.keys(S.cl).filter(n=>n!=S.me));M={id,b,r:0,o:f2(p.val*(.8+R()*.5))};render()}
+function sellDo(a){const[c,p]=find(M.id),B=S.cl[M.b];if(a=="ok"){c.bud=f2(c.bud+M.o);c.pl=c.pl.filter(x=>x.id!=p.id);B.pl.push(p);log(`Transfer: sprzedaż ${p.n} do ${B.n}`,M.o);flash=`Sprzedano ${p.n} do ${B.n} za ${M.o} M€.`;M=null;save()}
+ else if(a=="more"){if(M.r<2&&R()<.55){M.r++;M.o=f2(M.o*1.1)}else{flash=`${B.n} wycofał ofertę za ${p.n}.`;M=null}}else M=null;render()}
+function exp(){const b=new Blob([JSON.stringify(S)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="zapis-menedzer.json";a.click()}
+function imp(e){const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{S=JSON.parse(t);pid=S.pid;save();flash="Wczytano zapis z pliku."}catch(x){flash="Nieprawidłowy plik zapisu."}render()})}
+const sv=k=>{save(k);flash="Zapisano.";render()},ld=k=>{flash=load(k)?"Wczytano.":"Pusty slot.";render()},rm=k=>{localStorage.removeItem(k);localStorage.removeItem(k+"_m");render()};
+const rs=()=>{if(confirm("Zacząć od nowa? Niezapisany postęp zostanie utracony.")){S=null;render()}};
+const ST=(k,v)=>{S[k]=v;save();render()},TFs=(k,v)=>{TF[k]=v;render()},tb=i=>{tab=i;sel=null;render()};
+const row=(p,x)=>`<div class="pl${sel&&sel.pid==p.id?" on":""}" ${x?"":`onclick="cp(${p.id})"`}><i>${p.pos}</i><b>${p.n}<small>${p.age} l. · ${p.nat} · ${p.val} M€ · ${p.wage} tys. €/tydz.</small></b><em>${S.xi&&S.xi.includes(p.id)?"● ":""}${p.ovr}<small>/${p.pot}</small></em>${x||""}</div>`;
+function pitch(c){return`<div class="pitch">`+slots(S.form).map((s,i)=>{const p=c.pl.find(x=>x.id==S.xi[i]);return`<button class="dot${sel&&sel.slot==i?" on":""}" style="left:${s.x}%;top:${s.y}%" onclick="cs(${i})">${p?`<b>${p.ovr}${eff(p,s.r)<p.ovr?"⚠":""}</b><span>${p.n.split(" ").pop()}</span>`:"<b>?</b>"}</button>`}).join("")+`</div>`}
+const seg=(a,cur,fn)=>`<div class="seg">${a.map(([k,l])=>`<button class="${cur==k?"on":""}" onclick="${fn}(${typeof k=="number"?k:"'"+k+"'"})">${l}</button>`).join("")}</div>`;
+function render(){const app=$("#app");
+ if(!S){let a="";try{const m=JSON.parse(localStorage.getItem("fm_auto_m"));if(m)a=`<button class="btn" onclick="ld('fm_auto');">Kontynuuj: ${m.me}, sezon ${m.season}, kolejka ${m.rd+1}</button>`}catch(e){}
+  app.innerHTML=`<h1>⚽ Menedżer Piłkarski</h1><p class="mu">Wybierz ligę i klub. Gwiazdka przy nazwisku oznacza wygenerowanego zawodnika, bez gwiazdki to prawdziwy piłkarz (składy realne są tylko w części klubów, patrz data.js).</p>${a}`+Object.keys(LG).map(lg=>`<details><summary><h2 style="display:inline">${lg}</h2></summary><div class="g">`+LG[lg].c.split(";").map(c=>{const[n,st,s]=c.split("|");return`<button class="cl" onclick="mk('${lg}','${n}')"><b>${n}</b><small>${st} · siła ${s}</small></button>`}).join("")+"</div></details>").join("");return}
+ const c=S.cl[S.me],t=table(),pos=t.findIndex(x=>x.n==S.me)+1,n=S.sc.length,end=S.rd>=n;
+ if(!valid(c,S.xi))S.xi=auto(c,S.form);
+ let h=`<div class="hd"><b>${c.n}</b><div>${c.st} · ${S.lg} · ${S.season}/${(S.season+1)%100} · ${end?"koniec sezonu":"kolejka "+(S.rd+1)+"/"+n} · ${pos}. miejsce · budżet ${c.bud} M€</div></div>`;
+ if(flash){h+=`<div class="box fl">${flash}</div>`;flash=""}
+ if(tab==0){if(end)h+=`<div class="box"><b>Sezon zakończony.</b><p>Mistrz: ${t[0].n}. Twoje miejsce: ${pos}. z ${t.length}. Za miejsce dostaniesz ${(t.length-pos+1)*2} M€.</p><button class="btn" onclick="nextSeason()">Rozpocznij nowy sezon</button></div>`;
+  else{const[a,b]=S.sc[S.rd].find(x=>x.includes(S.me)),A=S.cl[a],B=S.cl[b];
+   h+=`<div class="box"><div class="mu">${dstr(S.rd)} · ${A.st}</div><div class="vs"><span>${a}</span><span>${b}</span></div><div class="mu">Siła klubów: ${A.s} vs ${B.s}${win()?" · okno transferowe otwarte":""}</div></div><div class="box"><b>Taktyka</b>${seg(TAC.map((x,i)=>[i,x]),S.tac,"ST.bind(null,'tac')")}</div><button class="btn" id="go" onclick="play()">Zagraj kolejkę</button><div id="live"></div>`}
+  if(S.last)h+=`<p class="mu">${S.last}</p>`;if(S.plog)h+=`<p class="mu">${S.plog}</p>`}
+ if(tab==1){const o=["G","D","M","F"];h+=`<h2>Skład wyjściowy</h2>${seg(Object.keys(FM).map(f=>[f,f]),S.form,"setForm")}<div class="mu" style="margin:6px 0">Stuknij pozycję na boisku, potem zawodnika z listy (lub inną pozycję), żeby zamienić. ⚠ = gra poza swoją pozycją.</div>${pitch(c)}<button class="btn" onclick="setForm(S.form)">Najlepszy skład</button><h2>Kadra (${c.pl.length})</h2>`+[...c.pl].sort((x,y)=>o.indexOf(x.pos)-o.indexOf(y.pos)||y.ovr-x.ovr).map(p=>row(p)).join("")}
+ if(tab==2){h+=`<h2>Transfery</h2>`;
+  if(!win())h+=`<div class="box">Okno transferowe jest zamknięte. Otwiera się latem (czerwiec–sierpień) i w styczniu.</div>`;
+  else{if(N){const[cc,p]=find(N.id);h+=`<div class="box"><b>${p.n}</b> <span class="mu">${cc.n} · ${p.age} l. · ${p.ovr}/${p.pot} · ${p.val} M€</span><p>${N.msg}</p><div class="mu">${N.st?"Pensja tygodniowa (tys. €)":"Oferta za zawodnika (M€)"}</div><input id="of" type="number" step="${N.st?1:.1}" value="${N.st?N.w:N.ask}"><button class="btn" onclick="bid()">${N.st?"Złóż ofertę kontraktu":"Złóż ofertę klubowi"}</button><button class="btn" style="background:var(--bd);color:var(--tx)" onclick="N=null;render()">Zrezygnuj</button></div>`}
+   if(M){const[,p]=find(M.id);h+=`<div class="box"><b>${S.cl[M.b].n}</b> oferuje <b>${M.o} M€</b> za ${p.n} (wartość ${p.val} M€).<div class="seg"><button onclick="sellDo('ok')">Sprzedaj</button><button onclick="sellDo('more')">Żądaj więcej</button><button onclick="sellDo('no')">Odmów</button></div></div>`}
+   h+=`<h2>Rynek</h2>${seg([["*","Wszyscy"],["G","BR"],["D","OB"],["M","PO"],["F","NA"]],TF.pos,"TFs.bind(null,'pos')")}<div class="seg"><input placeholder="Szukaj nazwiska" value="${TF.q}" onchange="TFs('q',this.value)"><select onchange="TFs('max',+this.value)">${[[0,"Dowolna cena"],[10,"do 10 M€"],[30,"do 30 M€"],[60,"do 60 M€"]].map(([v,l])=>`<option value="${v}"${TF.max==v?" selected":""}>${l}</option>`).join("")}</select></div>`;
+   const q=TF.q.toLowerCase(),res=[];for(const k in S.cl){if(k==S.me)continue;S.cl[k].pl.forEach(p=>{if((TF.pos=="*"||p.pos==TF.pos)&&(!q||p.n.toLowerCase().includes(q))&&(!TF.max||p.val<=TF.max))res.push([k,p])})}
+   res.sort((x,y)=>y[1].ovr-x[1].ovr);h+=res.slice(0,25).map(([k,p])=>row(p,`<button onclick="neg(${p.id})">Negocjuj</button>`).replace("<small>","<small>"+k+" · ")).join("")+`<div class="mu">Wyniki: ${Math.min(25,res.length)} z ${res.length}</div><h2>Sprzedaż</h2>`+[...c.pl].sort((x,y)=>y.val-x.val).map(p=>row(p,`<button onclick="sellOpen(${p.id})">Sprzedaj</button>`)).join("")}}
+ if(tab==3){const wb=wbill(c);h+=`<h2>Trening</h2><div class="box"><b>Cel treningu</b>${seg([["D","Obrona"],["M","Pomoc"],["F","Atak"],["G","Bramkarze"],["Y","Młodzież"]],S.foc,"ST.bind(null,'foc')")}<b style="display:block;margin-top:10px">Intensywność</b>${seg([[0,"Lekki"],[1,"Normalny"],[2,"Ciężki"]],S.int,"ST.bind(null,'int')")}<p class="mu">Koszt tygodniowy: ${f2(wb*[.02,.05,.1][S.int])} M€. Młodsi zawodnicy z zapasem potencjału rosną najszybciej. Zawodnicy spoza wybranej grupy też mogą awansować, ale rzadziej.</p></div><h2>Największe talenty</h2>`+[...c.pl].sort((x,y)=>(y.pot-y.ovr)-(x.pot-x.ovr)).slice(0,6).map(p=>row(p)).join("");if(S.plog)h+=`<p class="mu">${S.plog}</p>`}
+ if(tab==4){const wb=wbill(c);h+=`<h2>Finanse</h2><div class="box"><div class="vs"><span>Budżet</span><span>${c.bud} M€</span></div><div class="mu">Pensje: ${f2(wb)} M€ tygodniowo, ${f2(wb*S.sc.length)} M€ za sezon. Przychody: wpływy ze sponsorów i praw TV, bilety na meczach domowych, premie za zwycięstwa i nagroda za miejsce na koniec sezonu.</div></div><h2>Historia</h2>`+(S.fin.length?S.fin.map(x=>`<div class="pl"><b>${x.t}<small>${x.d}</small></b><em style="width:auto;color:${x.a<0?"#c0392b":"var(--ac)"}">${x.a>0?"+":""}${x.a}</em></div>`).join(""):`<p class="mu">Brak operacji. Rozegraj pierwszą kolejkę.</p>`)}
+ if(tab==5){h+=`<h2>Kalendarz</h2>`+S.sc.map((r,i)=>{const[a,b]=r.find(x=>x.includes(S.me)),m=dt(i).getUTCMonth(),w=m==7||m==0;return`<div class="pl${i==S.rd?" on":""}"><i>${i+1}</i><b>${a==S.me?"(D) "+b:"(W) "+a}<small>${dstr(i)}${w?" · okno transferowe":""}</small></b><em style="width:auto">${S.res[i]||""}</em></div>`}).join("")}
+ if(tab==6){h+=`<h2>Tabela</h2><table><tr><th>#</th><th>Klub</th><th>M</th><th>Bramki</th><th>Pkt</th></tr>`+t.map((k,i)=>`<tr class="${k.n==S.me?"me":""}"><td>${i+1}</td><td>${k.n}</td><td>${k.w+k.d+k.l}</td><td>${k.gf}:${k.ga}</td><td>${k.pts}</td></tr>`).join("")+`</table>`}
+ if(tab==7){h+=`<h2>Zapisy</h2><div class="mu">Gra zapisuje się automatycznie po każdej kolejce i transferze.</div>`+[1,2,3].map(i=>{let m=null;try{m=JSON.parse(localStorage.getItem("fm_s"+i+"_m"))}catch(e){}return`<div class="box"><b>Slot ${i}</b> <span class="mu">${m?m.me+", sezon "+m.season+", kolejka "+(m.rd+1):"pusty"}</span><div class="seg"><button onclick="sv('fm_s${i}')">Zapisz</button><button onclick="ld('fm_s${i}')">Wczytaj</button><button onclick="rm('fm_s${i}')">Usuń</button></div></div>`}).join("")+`<div class="seg"><button onclick="exp()">Eksport do pliku</button><label class="fb">Import z pliku<input type="file" accept=".json" onchange="imp(event)" hidden></label></div><button class="btn" style="background:var(--bd);color:var(--tx)" onclick="rs()">Nowa gra</button>`}
+ h+=`<div class="tabs">${["Mecz","Skład","Transfery","Trening","Finanse","Kalendarz","Tabela","Zapisy"].map((x,i)=>`<button class="${tab==i?"on":""}" onclick="tb(${i})">${x}</button>`).join("")}</div>`;app.innerHTML=h}
+load("fm_auto");render();
