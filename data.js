@@ -30,3 +30,10 @@ BEL:"Arne Thomas Jens Kobe Yannick Lars Maxim Robin|Peeters Janssens Maes Claes 
 BRA:"Gabriel Matheus Vitor Caio Rafael Bruno Felipe Lucas|Silva Oliveira Souza Lima Alves Barbosa Moreira Nunes",
 ARG:"Matías Nicolás Facundo Franco Lautaro Tomás Julián Ezequiel|Gómez Fernández Díaz Acosta Molina Herrera Sosa Ríos",
 POL:"Jakub Kacper Michał Mateusz Piotr Szymon Dawid Paweł|Kowalski Nowak Wójcik Kamiński Kaczmarek Mazur Dąbrowski Woźniak"};
+
+// PRAWDZIWE SKŁADY (np. z Transfermarkt). Jedna linia = jeden zawodnik, format:
+// Klub|poz(G/D/M/F)|wiek|kraj(3 litery)|wartość M€|Imię Nazwisko
+// Nazwa klubu musi być taka jak w LG. Kluby z min. 16 zawodnikami (w tym bramkarzem) zastępują składy z REAL i generowane.
+// Ocena jest wyliczana z wartości rynkowej. Możesz też wkleić te linie w grze (Zapisy > Import składów).
+const TM=`
+`;
