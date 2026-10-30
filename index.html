@@ -33,15 +33,17 @@ input,select{background:var(--card);border:1px solid var(--bd);border-radius:6px
 .sc{font-size:34px;text-align:center;margin:4px 0}
 .btn{display:block;background:var(--ac);color:#fff;border:0;border-radius:6px;padding:13px;width:100%;font-weight:700;margin-top:10px}
 .btn:disabled{opacity:.5}
-.seg{display:flex;gap:6px;margin-top:8px}
-.seg button,.fb{flex:1;padding:9px 4px;border:1px solid var(--bd);background:var(--bg);border-radius:6px;font-size:14px;text-align:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.seg button,.fb{flex:1 1 auto;padding:9px 4px;border:1px solid var(--bd);background:var(--bg);border-radius:6px;font-size:14px;text-align:center}
 .seg .on{background:var(--hi);color:#1a1a00;border-color:var(--hi);font-weight:700}
 table{width:100%;border-collapse:collapse;font-size:14px}
 td,th{padding:7px 3px;text-align:center;border-bottom:1px solid var(--bd)}
 td:nth-child(2),th:nth-child(2){text-align:left}
 tr.me{background:color-mix(in srgb,var(--hi) 25%,transparent);font-weight:700}
 .pl{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--bd)}
-.pl.on{background:color-mix(in srgb,var(--hi) 30%,transparent)}
+.pl.xi{background:color-mix(in srgb,var(--hi) 38%,transparent);border-left:4px solid var(--hi)}
+.pl.on{outline:2px solid var(--ac);outline-offset:-2px}
+.hl{font-weight:800;color:var(--tx);font-size:15px;text-decoration:underline}
 .pl i{font-style:normal;width:22px;color:var(--mu);font-size:13px}
 .pl b{flex:1;font-weight:400}
 .pl em{font-style:normal;font-weight:700;min-width:44px;text-align:right}
